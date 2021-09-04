@@ -37,8 +37,8 @@ logging " INFO" "pg_dump finished"
 logging " INFO" "gzip start"
 
 
-if [ ! -f "${BACKUPDIR}/${DBNAME}_${DATE}.sql" ]; then
-	gzip ${BACKUPDIR}/${DBNAME}_${DATE}.sql
+if [ ! -f "${BACKUPDIR}/${DBNAME}_${DATE}.sql.gz" ]; then
+	gzip ${BACKUPDIR}/${DBNAME}_${DATE}.sql | tee -a ${LOGDIR}/`basename $0 .sh`_`date "+%Y%m%d"`.log
 	if [ $? -ne 0 ];then
 		logging "ERROR" "gzip failed"
 	fi
@@ -48,7 +48,7 @@ fi
 logging " INFO" "gzip finished"
 
 logging " INFO" "dropbox upload start"
-/opt/scripts/dropbox_uploader/dropbox_uploader.sh upload ${BACKUPDIR}/${DBNAME}_${DATE}.sql.gz `uname -n`/postgres_backup/
+/opt/scripts/dropbox_uploader/dropbox_uploader.sh upload ${BACKUPDIR}/${DBNAME}_${DATE}.sql.gz `uname -n`/postgres_backup/ | tee -a ${LOGDIR}/`basename $0 .sh`_`date "+%Y%m%d"`.log
 if [ $? -ne 0 ];then
 	logging "ERROR" "dropbox upload failed"
 	exit
@@ -56,7 +56,7 @@ fi
 logging " INFO" "dropbox upload finished"
 
 logging " INFO" "delete old backup start"
-find ${BACKUPDIR} -type f -daystart -mtime ${BACKUP_PERIOD} -exec rm {} \;
+find ${BACKUPDIR} -type f -daystart -mtime ${BACKUP_PERIOD} -exec rm {} \; | tee -a ${LOGDIR}/`basename $0 .sh`_`date "+%Y%m%d"`.log
 if [ $? -ne 0 ];then
 	logging "ERROR" "delete old backup failed"
 fi
